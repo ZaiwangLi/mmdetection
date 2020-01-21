@@ -18,7 +18,8 @@ class Compose(object):
                 self.transforms.append(transform)
             else:
                 raise TypeError('transform must be callable or a dict')
-
+    
+    # python functor，定义一个有内参的function
     def __call__(self, data):
         for t in self.transforms:
             data = t(data)
