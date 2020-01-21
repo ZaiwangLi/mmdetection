@@ -29,6 +29,7 @@ class CustomDataset(Dataset):
     ]
 
     The `ann` field is optional for testing.
+    # ann是np格式，所以是feed进datasetloader时需要处理成tensor
     """
 
     CLASSES = None
@@ -81,18 +82,23 @@ class CustomDataset(Dataset):
         self.pipeline = Compose(pipeline)
 
     def __len__(self):
+        # 每一个image info都预先存起来
         return len(self.img_infos)
 
     def load_annotations(self, ann_file):
+        #读取 annotation file
         return mmcv.load(ann_file)
 
     def load_proposals(self, proposal_file):
+        #为什么会有proposal？
         return mmcv.load(proposal_file)
 
     def get_ann_info(self, idx):
+        #取 ann 里面的np array
         return self.img_infos[idx]['ann']
 
     def pre_pipeline(self, results):
+        #初始化key，并且确定路径
         results['img_prefix'] = self.img_prefix
         results['seg_prefix'] = self.seg_prefix
         results['proposal_file'] = self.proposal_file
@@ -113,6 +119,7 @@ class CustomDataset(Dataset):
 
         Images with aspect ratio greater than 1 will be set as group 1,
         otherwise group 0.
+        # 这里是分开w>l和l>w的image，记录在self.flag
         """
         self.flag = np.zeros(len(self), dtype=np.uint8)
         for i in range(len(self)):
@@ -121,6 +128,7 @@ class CustomDataset(Dataset):
                 self.flag[i] = 1
 
     def _rand_another(self, idx):
+        # 随机找一个长宽比一样的image 这句话的输出不是很明确
         pool = np.where(self.flag == self.flag[idx])[0]
         return np.random.choice(pool)
 
@@ -142,7 +150,7 @@ class CustomDataset(Dataset):
             results['proposals'] = self.proposals[idx]
         self.pre_pipeline(results)
         return self.pipeline(results)
-
+    # 怎么连个pipeline一样的，test需要数据增强吗？
     def prepare_test_img(self, idx):
         img_info = self.img_infos[idx]
         results = dict(img_info=img_info)
