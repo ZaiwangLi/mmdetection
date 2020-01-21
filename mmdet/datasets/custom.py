@@ -86,7 +86,8 @@ class CustomDataset(Dataset):
         return len(self.img_infos)
 
     def load_annotations(self, ann_file):
-        #读取 annotation file
+        #这里是所有的annotation都读进来了
+        #并且会存进self.image_infos
         return mmcv.load(ann_file)
 
     def load_proposals(self, proposal_file):
