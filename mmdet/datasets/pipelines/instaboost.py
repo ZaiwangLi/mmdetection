@@ -9,6 +9,7 @@ class InstaBoost(object):
     Data augmentation method in paper "InstaBoost: Boosting Instance
     Segmentation Via Probability Map Guided Copy-Pasting"
     Implementation details can refer to https://github.com/GothicAi/Instaboost.
+    #这是个什么玩意儿？？
     """
 
     def __init__(self,
