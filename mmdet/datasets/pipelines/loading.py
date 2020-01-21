@@ -19,6 +19,7 @@ class LoadImageFromFile(object):
                                 results['img_info']['filename'])
         else:
             filename = results['img_info']['filename']
+        # 主要是读进来image，其次是记录image的大小和路径
         img = mmcv.imread(filename)
         if self.to_float32:
             img = img.astype(np.float32)
@@ -29,6 +30,7 @@ class LoadImageFromFile(object):
         return results
 
     def __repr__(self):
+        # 相当于一个解释，还挺有用的
         return self.__class__.__name__ + '(to_float32={})'.format(
             self.to_float32)
 
