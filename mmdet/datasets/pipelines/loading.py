@@ -51,6 +51,7 @@ class LoadAnnotations(object):
         self.poly2mask = poly2mask
 
     def _load_bboxes(self, results):
+        #这句话意义在理？提自己东西给自己
         ann_info = results['ann_info']
         results['gt_bboxes'] = ann_info['bboxes']
 
@@ -58,6 +59,7 @@ class LoadAnnotations(object):
         if gt_bboxes_ignore is not None:
             results['gt_bboxes_ignore'] = gt_bboxes_ignore
             results['bbox_fields'].append('gt_bboxes_ignore')
+        # 记录 fields
         results['bbox_fields'].append('gt_bboxes')
         return results
 
