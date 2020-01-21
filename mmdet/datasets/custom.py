@@ -87,6 +87,7 @@ class CustomDataset(Dataset):
 
     def load_annotations(self, ann_file):
         #这里是所有的annotation都读进来了
+        #包括路径和ground truth
         #并且会存进self.image_infos
         return mmcv.load(ann_file)
 
