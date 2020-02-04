@@ -39,7 +39,7 @@ class Registry(object):
         if not force and module_name in self._module_dict:
             raise KeyError('{} is already registered in {}'.format(
                 module_name, self.name))
-        self._module_dict[module_name] = module_class
+        self._module_dict[module_name] = module_class  # class定义不是实例
 
     def register_module(self, cls=None, force=False):
         if cls is None:
