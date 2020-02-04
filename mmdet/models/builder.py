@@ -2,9 +2,10 @@ from torch import nn
 
 from mmdet.utils import build_from_cfg
 from .registry import (BACKBONES, DETECTORS, HEADS, LOSSES, NECKS,
-                       ROI_EXTRACTORS, SHARED_HEADS)
+                       ROI_EXTRACTORS, SHARED_HEADS) #这里都是（为了收集类定义的）class实例
 
 
+# 可以同时build一个或多个module
 def build(cfg, registry, default_args=None):
     if isinstance(cfg, list):
         modules = [
