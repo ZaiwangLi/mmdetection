@@ -4,6 +4,7 @@ from functools import partial
 import mmcv
 
 
+#收集一类的多个class定义
 class Registry(object):
 
     def __init__(self, name):
@@ -53,7 +54,9 @@ def build_from_cfg(cfg, registry, default_args=None):
 
     Args:
         cfg (dict): Config dict. It should at least contain the key "type".
+        实例化参数
         registry (:obj:`Registry`): The registry to search the type from.
+        将收集的类选择一个实例化，所以初始化完全看类自己
         default_args (dict, optional): Default initialization arguments.
 
     Returns:
