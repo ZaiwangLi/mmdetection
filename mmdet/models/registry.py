@@ -1,5 +1,6 @@
 from mmdet.utils import Registry
 
+# Registery普通类用来收集类定义
 BACKBONES = Registry('backbone')
 NECKS = Registry('neck')
 ROI_EXTRACTORS = Registry('roi_extractor')
