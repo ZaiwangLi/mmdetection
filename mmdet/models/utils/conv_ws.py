@@ -2,8 +2,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+# conv_ws_2d = weight norm + conv2d
 def conv_ws_2d(input,
-               weight,
+               weight,  # weight is changed in the function
                bias=None,
                stride=1,
                padding=0,
