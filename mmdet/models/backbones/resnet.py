@@ -10,6 +10,8 @@ from ..registry import BACKBONES
 from ..utils import build_conv_layer, build_norm_layer
 
 
+# the residual block demo of resnet
+# not used in real resnet
 class BasicBlock(nn.Module):
     expansion = 1
 
@@ -27,6 +29,8 @@ class BasicBlock(nn.Module):
                  gcb=None,
                  gen_attention=None):
         super(BasicBlock, self).__init__()
+        
+        #  these features are not here right now
         assert dcn is None, "Not implemented yet."
         assert gen_attention is None, "Not implemented yet."
         assert gcb is None, "Not implemented yet."
@@ -81,6 +85,8 @@ class BasicBlock(nn.Module):
         return out
 
 
+# bottlenet is the formal residual block for resnet
+# conv order: 1x1 -> 3x3 -> 1x1
 class Bottleneck(nn.Module):
     expansion = 4
 
@@ -121,7 +127,8 @@ class Bottleneck(nn.Module):
         self.with_gcb = gcb is not None
         self.gen_attention = gen_attention
         self.with_gen_attention = gen_attention is not None
-
+        
+        # caffe version downsampled earlier. 
         if self.style == 'pytorch':
             self.conv1_stride = 1
             self.conv2_stride = stride
