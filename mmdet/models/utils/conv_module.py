@@ -6,6 +6,8 @@ from mmcv.cnn import constant_init, kaiming_init
 from .conv_ws import ConvWS2d
 from .norm import build_norm_layer
 
+# ConvWs2d = weight norm + conv2d
+# Octave Conv = heigh frequceny + low frequency
 conv_cfg = {
     'Conv': nn.Conv2d,
     'ConvWS': ConvWS2d,
