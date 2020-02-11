@@ -3,6 +3,7 @@ import torch.nn.functional as F
 
 
 # conv_ws_2d = weight norm + conv2d
+# TODOs: investigate why we need this kind of conv?
 def conv_ws_2d(input,
                weight,  # weight is changed in the function
                bias=None,
