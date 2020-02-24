@@ -6,15 +6,31 @@ from mmcv.cnn import constant_init, kaiming_init
 from .conv_ws import ConvWS2d
 from .norm import build_norm_layer
 
-# ConvWs2d = weight norm + conv2d
-# Octave Conv = heigh frequceny + low frequency
+
+# 1. 头顶天，脚踏地：向上读的懂paper，理解技术大趋势，向下扣的了code，能事无巨细
+# 2. code reading order: from small parts to the whole (network) structure.
+# 3. python builders: 
+#    generic builder = register + builder, directly pass all params by **kwargs
+#    The builder is usually just a config file indicating the class name c followed by a initialization c(**kwargs)
+#    This project favor generic builder since it is simple to write and read
+#    The builder is used all over the project for convolutions, model structures and s
+#    
+# 4. different convolutions:
+#    ConvWs2d = weight norm + conv2d
+#    Octave Conv = heigh frequceny + low frequency
+#    depth wise: group num = out channel
+#    ... to be found, to be implemented
+# 5. ConvModule:conv + norm + relu, very easy to use. 
+#    what is the correct order?
+
+# register
 conv_cfg = {
     'Conv': nn.Conv2d,
     'ConvWS': ConvWS2d,
     # TODO: octave conv
 }
 
-
+# builder
 def build_conv_layer(cfg, *args, **kwargs):
     """ Build convolution layer
 
