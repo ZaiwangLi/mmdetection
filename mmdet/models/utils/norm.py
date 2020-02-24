@@ -1,4 +1,9 @@
-# register and build 
+# register and build norm
+# BatchImages Channel Height Width
+# GN: statistics from 1 of BI 1Group of C, all H, all Width
+# BN: statistics from all BI, 1 of C, all H, all Width
+# in Deep Learning, groups seems to be defined only for channels, such as conv with group!=1
+# SyncBN:?? still to be defined
 
 import torch.nn as nn
 
