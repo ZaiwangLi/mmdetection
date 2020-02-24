@@ -12,6 +12,11 @@ import torch
 #                 it returns xx=(0,1,0,1) yy=(2,2,3,3). xx duplicates itself when each of the original sequence ends
 #                 yy duplicates the same elements until the number reaches
 # example b is basically a sepcific example of meshgrid.
+#
+# important: anchors are highly related to the finally feature map size, so if we have more than one feature maps,
+#            we need to select the anchors correspondingly.
+# anchor selection: 1. feature map size reduces, 2. prior knowledge on which part of featuremap is not useful.
+
 class AnchorGenerator(object):
     """
     Examples:
