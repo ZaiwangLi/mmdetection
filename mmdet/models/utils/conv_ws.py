@@ -2,8 +2,18 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# conv_ws_2d = weight norm + conv2d
-# TODOs: investigate why we need this kind of conv?
+# 1. conv_ws_2d = weight norm + conv2d
+#    TODOs: investigate why we need this kind of conv?
+# 2. nn.Module: https://pytorch.org/docs/stable/_modules/torch/nn/modules/module.html
+#    Base class for all network modules:
+#    a. tree structure, top down control, change top level module can influence the submodules
+#       self._modules[name] = module, 
+#                 a                2 relations: run order, occupancy
+#         /    /  |   \  \
+#        b -> c-> d <- e -> f
+#                     /|\
+#    
+#    b. __init__ forward.
 def conv_ws_2d(input,
                weight,  # weight is changed in the function
                bias=None,
