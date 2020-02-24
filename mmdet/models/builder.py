@@ -1,5 +1,5 @@
 # generic builder: register and build
-# regiter: put all the similar classes into registry, 
+# regiter: what to register? class definition 
 # build: select the right class by config and initialize with params from cfg.
 
 from torch import nn
