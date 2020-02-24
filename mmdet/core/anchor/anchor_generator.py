@@ -1,6 +1,7 @@
 import torch
 
 
+# key words: pairing, meshgrid, broadcast rule
 class AnchorGenerator(object):
     """
     Examples:
@@ -25,10 +26,12 @@ class AnchorGenerator(object):
     @property
     def num_base_anchors(self):
         return self.base_anchors.size(0)
-
+    
     def gen_base_anchors(self):
         w = self.base_size
         h = self.base_size
+        
+        # base anchors only requires sizes, the position are defined by offsets
         if self.ctr is None:
             x_ctr = 0.5 * (w - 1)
             y_ctr = 0.5 * (h - 1)
@@ -38,6 +41,8 @@ class AnchorGenerator(object):
         h_ratios = torch.sqrt(self.ratios)
         w_ratios = 1 / h_ratios
         if self.scale_major:
+            # if there are n1 w_ratios and n2 scales, ws have length of n1 * n2
+            # kind of meshgrid implementation by using broadcast rules
             ws = (w * w_ratios[:, None] * self.scales[None, :]).view(-1)
             hs = (h * h_ratios[:, None] * self.scales[None, :]).view(-1)
         else:
@@ -52,9 +57,12 @@ class AnchorGenerator(object):
             ],
             dim=-1).round()
         # yapf: enable
-
+        
         return base_anchors
-
+    
+    # meishgrid is implemented in tensorflow but in pytorch you have to do it yourself.
+    # all the combinitions of x and y, for example: x: (0, 1) y: (2, 3), combinations:(0,2),(1,2)(0,3)(1,3)
+    # xx = (0,1,0,1) yy=(2, 2, 3, 3)^T
     def _meshgrid(self, x, y, row_major=True):
         xx = x.repeat(len(y))
         yy = y.view(-1, 1).repeat(1, len(x)).view(-1)
@@ -86,6 +94,17 @@ class AnchorGenerator(object):
         feat_h, feat_w = featmap_size
         valid_h, valid_w = valid_size
         assert valid_h <= feat_h and valid_w <= feat_w
+        
+        # not all anchors can fit one perticular feature map, for example:
+        # the feature map is downsampled or cropped.
+        # so we have to have flags to remove some of them
+        #   111100   original anchors spreads over 6*6 
+        #   111100   now the anchors are 4*4 by the flag mask
+        #   111100
+        #   111100
+        #   000000
+        #   000000
+        #   ...
         valid_x = torch.zeros(feat_w, dtype=torch.uint8, device=device)
         valid_y = torch.zeros(feat_h, dtype=torch.uint8, device=device)
         valid_x[:valid_w] = 1
