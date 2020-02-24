@@ -1,4 +1,7 @@
+# register and build 
+
 import torch.nn as nn
+
 
 norm_cfg = {
     # format: layer_type: (abbreviation, module)
