@@ -2,6 +2,16 @@ import torch
 
 
 # key words: pairing, meshgrid, broadcast rule
+# broadcast rule: x shape (10, 10), y shape(1, 10). if you do x + y or x * y, 
+#                 y will automatically expand its row to be of shape (10, 10),
+#                 another exmaple b: shape(1, 10) + shape(10, 1) = shape(10, 10)
+#                 choose a collegue to give an example.
+#
+# meshgrid:       pair all the elements between 2 tensors.
+#                 for example: x: (0, 1) y: (2, 3), combinations:(0,2),(1,2)(0,3)(1,3)
+#                 it returns xx=(0,1,0,1) yy=(2,2,3,3). xx duplicates itself when each of the original sequence ends
+#                 yy duplicates the same elements until the number reaches
+# example b is basically a sepcific example of meshgrid.
 class AnchorGenerator(object):
     """
     Examples:
