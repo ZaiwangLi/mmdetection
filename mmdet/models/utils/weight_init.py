@@ -2,6 +2,8 @@ import numpy as np
 import torch.nn as nn
 
 
+# so many init, which one is the best? Kaiming, it is also the default init for every module.
+# pytorch have this rule: default is always the best, so if you don't config anything, kaiming is enabled.
 def xavier_init(module, gain=1, bias=0, distribution='normal'):
     assert distribution in ['uniform', 'normal']
     if distribution == 'uniform':
