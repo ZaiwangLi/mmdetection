@@ -1,3 +1,7 @@
+# generic builder: register and build
+# regiter: put all the similar classes into registry, 
+# build: select the right class by config and initialize with params from cfg.
+
 from torch import nn
 
 from mmdet.utils import build_from_cfg
