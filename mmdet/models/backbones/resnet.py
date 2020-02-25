@@ -1,3 +1,8 @@
+# module: build_conv_layer <- conv_cfg, build_norm_layer <- norm_cfg,
+# dcn: conv3*3 for offesets(the real 9 positions for the corresponding pixel) and weights, then do mul-add
+# 
+
+
 import torch.nn as nn
 import torch.utils.checkpoint as cp
 from mmcv.cnn import constant_init, kaiming_init
