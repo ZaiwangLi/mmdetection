@@ -1,3 +1,10 @@
+# this is the most commonly used assigner before.
+# since assigning is a new hot topic, this is not a good choice right now.
+# But it is still very important since others may use it as one step.
+
+
+
+
 import torch
 
 from ..geometry import bbox_overlaps
@@ -57,13 +64,15 @@ class MaxIoUAssigner(BaseAssigner):
         0 means negative sample, positive number is the index (1-based) of
         assigned gt.
         The assignment is done in following steps, the order matters.
-
+        
+        这四步的逻辑一定要想清楚
         1. assign every bbox to -1
         2. assign proposals whose iou with all gts < neg_iou_thr to 0
         3. for each bbox, if the iou with its nearest gt >= pos_iou_thr,
            assign it to that bbox
         4. for each gt bbox, assign its nearest proposals (may be more than
            one) to itself
+        
 
         Args:
             bboxes (Tensor): Bounding boxes to be assigned, shape(n, 4).
