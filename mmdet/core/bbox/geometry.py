@@ -1,3 +1,8 @@
+# iou calculation: basic ops that can help to understand tensor operation
+# box1 [up1, left1, right1, bottom1], box2[up2, left2, right2, bottom2] 
+# overlap box: [max(up1, up2), max(left1, left2), min(right1, right2), min(bottom1, bottom2)]
+# what if no overlap?
+
 import torch
 
 
