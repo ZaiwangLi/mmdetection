@@ -1,3 +1,6 @@
+# online hard example mining: heighest k losses are calculated
+
+
 import torch
 
 from ..transforms import bbox2roi
