@@ -1,3 +1,9 @@
+# transpose + contiguous
+# *args: no default values
+# **kwargs: key value pair with defults
+# 
+
+
 from functools import partial
 
 import mmcv
@@ -5,6 +11,7 @@ import numpy as np
 from six.moves import map, zip
 
 
+# an example of tranpose + contiguous
 def tensor2imgs(tensor, mean=(0, 0, 0), std=(1, 1, 1), to_rgb=True):
     num_imgs = tensor.size(0)
     mean = np.array(mean, dtype=np.float32)
@@ -20,6 +27,7 @@ def tensor2imgs(tensor, mean=(0, 0, 0), std=(1, 1, 1), to_rgb=True):
 
 def multi_apply(func, *args, **kwargs):
     pfunc = partial(func, **kwargs) if kwargs else func
+    # **kwargs are the func parameters, *args are multiple intputs
     map_results = map(pfunc, *args)
     return tuple(map(list, zip(*map_results)))
 
@@ -28,6 +36,7 @@ def unmap(data, count, inds, fill=0):
     """ Unmap a subset of item (data) back to the original set of items (of
     size count) """
     if data.dim() == 1:
+        # all-zero tensor
         ret = data.new_full((count, ), fill)
         ret[inds] = data
     else:
