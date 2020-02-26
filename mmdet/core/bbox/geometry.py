@@ -3,6 +3,20 @@
 # overlap box: [max(up1, up2), max(left1, left2), min(right1, right2), min(bottom1, bottom2)]
 # what if no overlap?
 
+# broadcast rule and score matrix.
+# if we have box lists bboxes=[b1, b2, b3, b4], gt = [b5, b6, b7, b8]
+# then the overlap score matrix:
+#        b1   b2    b3   b4
+#    b5  0.1  0.5   0.4  0.6
+#    b6  0.1  0.9   0.3  0.3
+#    b7  0.8  0.7   0.5  0.2
+#    b8  0.2  0.2.5 0.2  0.1
+# How to assign? 
+
+# score matrix is a commonly used method for match algortihms,
+# eg: tracking will have a score matrix to decide whether objects 
+# from 2 different frames are the same objects
+
 import torch
 
 
