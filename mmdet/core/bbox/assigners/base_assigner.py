@@ -1,3 +1,8 @@
+# abstract base class for assigner
+# assigner is to match the gtboxes with bboxes, decide which are positive, 
+# which are negtive, which are neglected
+
+
 from abc import ABCMeta, abstractmethod
 
 
