@@ -1,3 +1,6 @@
+# sampler is for changing the rois distributions: eg: positive and negtive,
+
+
 from abc import ABCMeta, abstractmethod
 
 import torch
