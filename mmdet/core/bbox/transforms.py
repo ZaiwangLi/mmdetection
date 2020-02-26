@@ -1,3 +1,18 @@
+# mmdet tends to implement bbox ops in torch to make good use of gpu
+
+# anchors: the fixed boxes where the predictions start from
+# rois: often in the second stage, the first stage outputs 
+# gtboxes: ground truth
+# delta: the difference between anchors and gtboxes
+
+# regression is not regressing delta directly
+# bbox encoding and decoding:
+#   why: delta are not easy to regress directly.
+#   what: encoding: delta, [x, y, h, w] => delta_modified, [dx, dy, dh, dw]
+#   how: log, norm and so on
+
+
+
 import mmcv
 import numpy as np
 import torch
@@ -18,10 +33,12 @@ def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
     gw = gt[..., 2] - gt[..., 0] + 1.0
     gh = gt[..., 3] - gt[..., 1] + 1.0
 
-    dx = (gx - px) / pw
-    dy = (gy - py) / ph
-    dw = torch.log(gw / pw)
-    dh = torch.log(gh / ph)
+    dx = (gx - px) / pw  # < 1, 
+    # assigner usually give overlapping boxes, but < 1 doesn't always hold.
+    # the main purpose is make dx dy dw dh not too big.
+    dy = (gy - py) / ph  # < 1,
+    dw = torch.log(gw / pw)  # < 1
+    dh = torch.log(gh / ph)  # < 1
     deltas = torch.stack([dx, dy, dw, dh], dim=-1)
 
     means = deltas.new_tensor(means).unsqueeze(0)
@@ -113,7 +130,7 @@ def delta2bbox(rois,
 
 def bbox_flip(bboxes, img_shape):
     """Flip bboxes horizontally.
-
+       因为我们可能需要flip image，所以对应需要flip box
     Args:
         bboxes(Tensor or ndarray): Shape (..., 4*k)
         img_shape(tuple): Image shape.
