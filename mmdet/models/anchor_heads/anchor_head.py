@@ -1,3 +1,9 @@
+# anchor num:
+#   anchor num per pixel of 1 feature map = scales * ratios
+#   anchor num per feature map = (scales * ratios * h * w)
+
+
+
 from __future__ import division
 
 import numpy as np
