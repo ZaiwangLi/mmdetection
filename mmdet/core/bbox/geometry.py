@@ -75,6 +75,11 @@ def bbox_overlaps(bboxes1, bboxes2, mode='iou', is_aligned=False):
         else:
             ious = overlap / area1
     else:
+        # not aligned boxes are usually used for assigners,
+        # because assigners need to know all the overlaps between every bbox and every gtbox
+        
+        # none add a new axis ag: [3,4] => [3, 1, 4] 
+        # torch.max will broadcast: 3 1 4,  5 4 => 3 5 4
         lt = torch.max(bboxes1[:, None, :2], bboxes2[:, :2])  # [rows, cols, 2]
         rb = torch.min(bboxes1[:, None, 2:], bboxes2[:, 2:])  # [rows, cols, 2]
 
