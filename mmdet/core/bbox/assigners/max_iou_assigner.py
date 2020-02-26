@@ -105,6 +105,8 @@ class MaxIoUAssigner(BaseAssigner):
                 gt_labels = gt_labels.cpu()
 
         bboxes = bboxes[:, :4]
+        
+        # score matrix
         overlaps = bbox_overlaps(gt_bboxes, bboxes)
 
         if (self.ignore_iof_thr > 0) and (gt_bboxes_ignore is not None) and (
