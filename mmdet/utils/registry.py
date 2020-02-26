@@ -1,3 +1,8 @@
+# registry: its instance will register all the classes definition, 
+#           then builder can use them by a registery instance.
+
+
+
 import inspect
 from functools import partial
 
@@ -56,7 +61,7 @@ def build_from_cfg(cfg, registry, default_args=None):
         cfg (dict): Config dict. It should at least contain the key "type".
         实例化参数
         registry (:obj:`Registry`): The registry to search the type from.
-        将收集的类选择一个实例化，所以初始化完全看类自己
+        将收集的类选择一个实例化，所以初始化参数完全是按照自己的参数在config中进行书写
         default_args (dict, optional): Default initialization arguments.
 
     Returns:
@@ -65,7 +70,7 @@ def build_from_cfg(cfg, registry, default_args=None):
     assert isinstance(cfg, dict) and 'type' in cfg
     assert isinstance(default_args, dict) or default_args is None
     args = cfg.copy()
-    obj_type = args.pop('type')
+    obj_type = args.pop('type')  # config和特定类初始化唯一的区别就是多了一个类的名字，这个参数用来选定类然后pop掉
     if mmcv.is_str(obj_type):
         obj_cls = registry.get(obj_type)
         if obj_cls is None:
