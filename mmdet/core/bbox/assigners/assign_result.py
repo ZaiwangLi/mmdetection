@@ -1,3 +1,7 @@
+# class for results returned by assigner
+
+
+
 import torch
 
 
