@@ -1,9 +1,12 @@
+# bbox_target is how to use bbox2delta.
+
+
 import torch
 
 from ..utils import multi_apply
 from .transforms import bbox2delta
 
-
+# extend bbox_target_single with map
 def bbox_target(pos_bboxes_list,
                 neg_bboxes_list,
                 pos_gt_bboxes_list,
