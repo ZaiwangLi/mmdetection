@@ -20,6 +20,19 @@ import torch
 
 def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
     assert proposals.size() == gt.size()
+    """
+    Args:
+        proposals: shape of (M1, M2, M3, ..., 4), dimensions except the last one
+                   are for the batches or image size or feature map index, or other extended dim
+                   The last dim = 4, stands for x1 y1 x2 y2
+                                                0  1  2  3
+        gt: shape of (N, N2, N3, ..., 4), dimensions except the last one
+                   are for the batches or image size or feature map index, or other extended dim
+        means: means of the boxes for normalization
+        stds: std of the boxes for normalization
+    return: 
+        encoded bboxes: 
+    """
 
     proposals = proposals.float()
     gt = gt.float()
@@ -40,7 +53,8 @@ def bbox2delta(proposals, gt, means=[0, 0, 0, 0], stds=[1, 1, 1, 1]):
     dw = torch.log(gw / pw)  # < 1
     dh = torch.log(gh / ph)  # < 1
     deltas = torch.stack([dx, dy, dw, dh], dim=-1)
-
+    
+    # list to tensor
     means = deltas.new_tensor(means).unsqueeze(0)
     stds = deltas.new_tensor(stds).unsqueeze(0)
     deltas = deltas.sub_(means).div_(stds)
@@ -92,6 +106,7 @@ def delta2bbox(rois,
                 [0.0000, 0.6321, 7.3891, 0.3679],
                 [5.8967, 2.9251, 5.5033, 3.2749]])
     """
+    # denorm: deltas * std + means
     means = deltas.new_tensor(means).repeat(1, deltas.size(1) // 4)
     stds = deltas.new_tensor(stds).repeat(1, deltas.size(1) // 4)
     denorm_deltas = deltas * stds + means
@@ -99,9 +114,12 @@ def delta2bbox(rois,
     dy = denorm_deltas[:, 1::4]
     dw = denorm_deltas[:, 2::4]
     dh = denorm_deltas[:, 3::4]
+    
+    # max ratio clip
     max_ratio = np.abs(np.log(wh_ratio_clip))
     dw = dw.clamp(min=-max_ratio, max=max_ratio)
     dh = dh.clamp(min=-max_ratio, max=max_ratio)
+    
     # Compute center of each roi
     px = ((rois[:, 0] + rois[:, 2]) * 0.5).unsqueeze(1).expand_as(dx)
     py = ((rois[:, 1] + rois[:, 3]) * 0.5).unsqueeze(1).expand_as(dy)
@@ -120,6 +138,7 @@ def delta2bbox(rois,
     x2 = gx + gw * 0.5 - 0.5
     y2 = gy + gh * 0.5 - 0.5
     if max_shape is not None:
+        # not beyond the image edges
         x1 = x1.clamp(min=0, max=max_shape[1] - 1)
         y1 = y1.clamp(min=0, max=max_shape[0] - 1)
         x2 = x2.clamp(min=0, max=max_shape[1] - 1)
