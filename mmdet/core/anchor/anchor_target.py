@@ -124,6 +124,13 @@ def anchor_target_single(flat_anchors,
     return:
         ?
     """
+    # both index and T are torch/numpy tensors
+    #  index = [T F T F T T F F]
+    #  T = [1,2,3,4,5,6,5,7,8]
+    #  T[index] = [1,3,5,6]
+    #
+    #  index = [1, 2, 5, 7]
+    #  T[index] = [2, 3, 6, 8]
     
     # remove images outside the image
     inside_flags = anchor_inside_flags(flat_anchors, valid_flags,
