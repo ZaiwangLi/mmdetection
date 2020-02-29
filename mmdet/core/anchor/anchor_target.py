@@ -78,8 +78,13 @@ def anchor_target(anchor_list,
 
 def images_to_levels(target, num_level_anchors):
     """Convert targets by image to targets by feature level.
-
     [target_img0, target_img1] -> [target_level0, target_level1, ...]
+    Args:
+        target: all the target(boxes or something else) across 
+            different images in a batch
+        num_level_anchors: list, [lvl1_num, lvl2_num, lvl3_num ...] 
+    returns:
+        level_targets: split all the targets by levels
     """
     target = torch.stack(target, 0)
     level_targets = []
