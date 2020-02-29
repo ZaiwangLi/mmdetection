@@ -163,6 +163,16 @@ def anchor_inside_flags(flat_anchors,
                         valid_flags,
                         img_shape,
                         allowed_border=0):
+    """
+    Args:
+        flat_anchors: shape [-1, 4], for anchors without feature map info
+        valid_flags: prior knowledge of validation
+        image_shape:
+        allowed_border: when >=0 anchors must have limitations 
+            regard to the image size
+    returns:
+        inside_flags: indicate wheter the anchor is in the image 
+    """
     img_h, img_w = img_shape[:2]
     if allowed_border >= 0:
         inside_flags = valid_flags & \
@@ -175,9 +185,19 @@ def anchor_inside_flags(flat_anchors,
     return inside_flags
 
 
+
 def unmap(data, count, inds, fill=0):
     """ Unmap a subset of item (data) back to the original set of items (of
     size count) """
+    """
+    Args:
+        data: subset items
+        count: original set item number
+        inds: data's original indexes
+        fill: fill in default vales for return tensor
+    return:
+        ret, shape of original data with corresponding pos filled by data
+    """
     if data.dim() == 1:
         ret = data.new_full((count, ), fill)
         ret[inds] = data
