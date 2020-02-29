@@ -108,17 +108,38 @@ def anchor_target_single(flat_anchors,
                          label_channels=1,
                          sampling=True,
                          unmap_outputs=True):
+    """
+    Args:
+        flat_anchors: shape of [-1, 4], other feature map info are lost.
+        valid_flags: prior knowledge on whether a anchor is useful
+        gt_bboxes: the classification and regression for
+        gt_bboxes_ignore: prior knowledge on whether a gtbbox is useful
+        img_meta: >>
+        target_means:
+        target_stds:
+        cfg:
+        label_chennels: 
+        sampling:
+        unmap_outputs:
+    return:
+        ?
+    """
+    
+    # remove images outside the image
     inside_flags = anchor_inside_flags(flat_anchors, valid_flags,
                                        img_meta['img_shape'][:2],
                                        cfg.allowed_border)
+    
     if not inside_flags.any():
         return (None, ) * 6
+    
     # assign gt and sample anchors
     anchors = flat_anchors[inside_flags, :]
 
     if sampling:
         assign_result, sampling_result = assign_and_sample(
             anchors, gt_bboxes, gt_bboxes_ignore, None, cfg)
+        
     else:
         bbox_assigner = build_assigner(cfg.assigner)
         assign_result = bbox_assigner.assign(anchors, gt_bboxes,
@@ -126,7 +147,8 @@ def anchor_target_single(flat_anchors,
         bbox_sampler = PseudoSampler()
         sampling_result = bbox_sampler.sample(assign_result, anchors,
                                               gt_bboxes)
-
+    
+    
     num_valid_anchors = anchors.shape[0]
     bbox_targets = torch.zeros_like(anchors)
     bbox_weights = torch.zeros_like(anchors)
@@ -136,12 +158,14 @@ def anchor_target_single(flat_anchors,
     pos_inds = sampling_result.pos_inds
     neg_inds = sampling_result.neg_inds
     if len(pos_inds) > 0:
+        # encoding:
         pos_bbox_targets = bbox2delta(sampling_result.pos_bboxes,
                                       sampling_result.pos_gt_bboxes,
                                       target_means, target_stds)
         bbox_targets[pos_inds, :] = pos_bbox_targets
         bbox_weights[pos_inds, :] = 1.0
         if gt_labels is None:
+            # binary classification
             labels[pos_inds] = 1
         else:
             labels[pos_inds] = gt_labels[sampling_result.pos_assigned_gt_inds]
