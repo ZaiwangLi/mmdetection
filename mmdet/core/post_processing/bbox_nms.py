@@ -13,6 +13,9 @@ def multiclass_nms(multi_bboxes,
 
     Args:
         multi_bboxes (Tensor): shape (n, #class*4) or (n, 4)
+            部分解决了同一个尺寸和位置的box根据class复制自己的问题,
+            所以昨天的说的assigner的抢夺问题，同一个box对应两个gtboxes的情况，
+            若两个gtboxes不是同一类则不存在问题，同一类则抢夺依然失败   
         multi_scores (Tensor): shape (n, #class), where the 0th column
             contains scores of the background class, but this will be ignored.
         score_thr (float): bbox threshold, bboxes with scores lower than it
@@ -31,7 +34,9 @@ def multiclass_nms(multi_bboxes,
     bboxes, labels = [], []
     nms_cfg_ = nms_cfg.copy()
     nms_type = nms_cfg_.pop('type', 'nms')
+    # get the attribute which has the same name of nms_type
     nms_op = getattr(nms_wrapper, nms_type)
+    
     for i in range(1, num_classes):
         cls_inds = multi_scores[:, i] > score_thr
         if not cls_inds.any():
@@ -46,6 +51,7 @@ def multiclass_nms(multi_bboxes,
             _scores *= score_factors[cls_inds]
         cls_dets = torch.cat([_bboxes, _scores[:, None]], dim=1)
         cls_dets, _ = nms_op(cls_dets, **nms_cfg_)
+        # only copy the datatype and device
         cls_labels = multi_bboxes.new_full((cls_dets.shape[0], ),
                                            i - 1,
                                            dtype=torch.long)
