@@ -1,3 +1,5 @@
+# wrap loss function with weighted reduction
+
 import functools
 
 import torch.nn.functional as F
