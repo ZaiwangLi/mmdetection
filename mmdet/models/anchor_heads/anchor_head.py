@@ -1,7 +1,5 @@
-# anchor num:
-#   anchor num per pixel of 1 feature map = scales * ratios
-#   anchor num per feature map = (scales * ratios * h * w)
-
+# weight initialization: norm? why
+# 
 
 
 from __future__ import division
