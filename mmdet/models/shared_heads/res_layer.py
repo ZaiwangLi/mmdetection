@@ -1,3 +1,6 @@
+# not used in this project, maybe later can collect useful blocks and strutures
+
+
 import torch.nn as nn
 from mmcv.cnn import constant_init, kaiming_init
 from mmcv.runner import load_checkpoint
