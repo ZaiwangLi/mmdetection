@@ -106,7 +106,9 @@ class BBoxHead(nn.Module):
            get_target is encoding.
         Args:
             sampling_resuls: list contain the pairs for pos and negs
-            gt_bboxes: 
+            gt_bboxes: not used
+            gt_labels: not used
+            rcnn_train_cfg: dict, only for pos_weight here
         """
         pos_proposals = [res.pos_bboxes for res in sampling_results]
         neg_proposals = [res.neg_bboxes for res in sampling_results]
