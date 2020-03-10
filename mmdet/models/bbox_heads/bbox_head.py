@@ -80,6 +80,8 @@ class BBoxHead(nn.Module):
         self.debug_imgs = None
 
     def init_weights(self):
+        """Weight initialization of fc layers are normal_
+        """
         if self.with_cls:
             nn.init.normal_(self.fc_cls.weight, 0, 0.01)
             nn.init.constant_(self.fc_cls.bias, 0)
@@ -89,6 +91,8 @@ class BBoxHead(nn.Module):
 
     @auto_fp16()
     def forward(self, x):
+        """forward from ROI tensors to cls and regression
+        """
         if self.with_avg_pool:
             x = self.avg_pool(x)
         x = x.view(x.size(0), -1)
@@ -98,6 +102,12 @@ class BBoxHead(nn.Module):
 
     def get_target(self, sampling_results, gt_bboxes, gt_labels,
                    rcnn_train_cfg):
+        """after anchor assignment and sampling, the boxes and gts are matched in pairs,
+           get_target is encoding.
+        Args:
+            sampling_resuls: list contain the pairs for pos and negs
+            gt_bboxes: 
+        """
         pos_proposals = [res.pos_bboxes for res in sampling_results]
         neg_proposals = [res.neg_bboxes for res in sampling_results]
         pos_gt_bboxes = [res.pos_gt_bboxes for res in sampling_results]
