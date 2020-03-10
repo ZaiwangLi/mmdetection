@@ -173,10 +173,23 @@ class BBoxHead(nn.Module):
                        scale_factor,
                        rescale=False,
                        cfg=None):
+        """For inference, to get the final detection boxes
+        Args:
+            rois (Tensors):  Shape (n*bs, 5), where n is image number per GPU,
+                and bs is the sampled RoIs per image. The first column is
+                the image id and the next 4 columns are x1, y1, x2, y2.
+            cls_score (Tensor): shape 
+            bbox_preds (Tensor): Shape (n*bs, 4) or (n*bs, 4*#class). for box predictions
+            image_shape (tuple): h w
+            scale_factor (float): 
+            rescale (bool): 
+            cfg (None or dict): 
+        """
         if isinstance(cls_score, list):
             cls_score = sum(cls_score) / float(len(cls_score))
         scores = F.softmax(cls_score, dim=1) if cls_score is not None else None
-
+        
+        # decode
         if bbox_pred is not None:
             bboxes = delta2bbox(rois[:, 1:], bbox_pred, self.target_means,
                                 self.target_stds, img_shape)
