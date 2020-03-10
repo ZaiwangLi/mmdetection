@@ -31,6 +31,20 @@ class BBoxHead(nn.Module):
                      loss_weight=1.0),
                  loss_bbox=dict(
                      type='SmoothL1Loss', beta=1.0, loss_weight=1.0)):
+        """
+        Args:
+           with_avg_pool: bool, whether to change ROI to a vector
+           with_cls: bool, cls loss
+           with_reg: bool, regression loss
+           roi_feat_size: int, resize shape
+           in_channels: int, input roi channels
+           num_classes: int, for cls loss
+           target_means: tensor, regression normalization means
+           target_stds: tensor, regression normalization std
+           reg_class_agnostic: bool, ???
+           loss_cls: dict, config for cls loss
+           loss_bbox: dict, config for bbox loss
+        """
         super(BBoxHead, self).__init__()
         assert with_cls or with_reg
         self.with_avg_pool = with_avg_pool
