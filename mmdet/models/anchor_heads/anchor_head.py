@@ -94,6 +94,8 @@ class AnchorHead(nn.Module):
         self.fp16_enabled = False
 
         self.anchor_generators = []
+        
+        # anchor_base_sizes is the base sizes for different feature maps
         for anchor_base in self.anchor_base_sizes:
             self.anchor_generators.append(
                 AnchorGenerator(anchor_base, anchor_scales, anchor_ratios))
