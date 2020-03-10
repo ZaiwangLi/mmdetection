@@ -1,5 +1,5 @@
 # weight initialization: norm? why
-# 
+# Anchor head wont predict more than one bbox for one anchor.
 
 
 from __future__ import division
