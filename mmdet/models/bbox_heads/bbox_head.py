@@ -1,3 +1,8 @@
+# 1. bbox regression channel num = 4 * num_classes, bbox cls channel num = num_classes
+#    this is for for multi-class nums
+# 2. weight initialization: fc layers are initialized with normal function
+# 3. 
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -263,7 +268,7 @@ class BBoxHead(nn.Module):
             bboxes_list.append(bboxes[keep_inds])
 
         return bboxes_list
-
+    
     @force_fp32(apply_to=('bbox_pred', ))
     def regress_by_class(self, rois, label, bbox_pred, img_meta):
         """Regress the bbox for the predicted class. Used in Cascade R-CNN.
