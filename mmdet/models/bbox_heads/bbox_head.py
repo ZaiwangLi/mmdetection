@@ -1,7 +1,7 @@
 # 1. bbox regression channel num = 4 * num_classes, bbox cls channel num = num_classes
 #    this is for for multi-class nums
 # 2. weight initialization: fc layers are initialized with normal function
-# 3. 
+# 3. bboxhead only deal with stages after roi pooling and roi assignment
 
 import torch
 import torch.nn as nn
