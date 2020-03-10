@@ -224,6 +224,8 @@ class AnchorHead(nn.Module):
         Args:
             cls_scores (list[Tensor]): Box scores for each scale level
                 Has shape (N, num_anchors * num_classes, H, W)
+                list length = scale level 
+                
             bbox_preds (list[Tensor]): Box energies / deltas for each scale
                 level with shape (N, num_anchors * 4, H, W)
             img_metas (list[dict]): size / scale info for each image
@@ -292,21 +294,38 @@ class AnchorHead(nn.Module):
                           cfg,
                           rescale=False):
         """
-        Transform outputs for a single batch item into labeled boxes.
+        Transform outputs for a single batch item(image) into labeled boxes.
+        Args:
+            cls_score_list (list[tensor]): tensors of shape (num_anchors * num_classes, H, W)
+                cls scores splited by scale level for one image 
+            bbox_pred_list (list[tensor]): tensors of shape (num_anchors * 4, H, W)
+                bbox sacores splited by scale level for one image
+            mlvl_anchors (list[tensor]): tensors of shape (num_anchors * 4, H, W) 
+                anchors splited by scale level for one image
+            img_shape (tuple): 
+            scale_factor (tensor):
+            cfg (dict or none):
+            rescale bool: if True, return boxes in original image space
         """
         assert len(cls_score_list) == len(bbox_pred_list) == len(mlvl_anchors)
         mlvl_bboxes = []
         mlvl_scores = []
         for cls_score, bbox_pred, anchors in zip(cls_score_list,
                                                  bbox_pred_list, mlvl_anchors):
+            # image size must be same
             assert cls_score.size()[-2:] == bbox_pred.size()[-2:]
+            
+            # channel last for box operations, remove hw dimensions
             cls_score = cls_score.permute(1, 2,
                                           0).reshape(-1, self.cls_out_channels)
             if self.use_sigmoid_cls:
                 scores = cls_score.sigmoid()
             else:
                 scores = cls_score.softmax(-1)
+                
+            # channel last for box operations, remove hw demensions
             bbox_pred = bbox_pred.permute(1, 2, 0).reshape(-1, 4)
+            
             nms_pre = cfg.get('nms_pre', -1)
             if nms_pre > 0 and scores.shape[0] > nms_pre:
                 # Get maximum scores for foreground classes.
