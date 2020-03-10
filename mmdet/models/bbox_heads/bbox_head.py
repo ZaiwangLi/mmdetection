@@ -287,10 +287,17 @@ class BBoxHead(nn.Module):
         if not self.reg_class_agnostic:
             label = label * 4
             inds = torch.stack((label, label + 1, label + 2, label + 3), 1)
+            """
+            [[4* cls1, 4* cls1 + 1, 4* cls1 + 2, 4* cls1 + 3],
+             [4* cls2, 4* cls2 + 1, 4* cls2 + 2, 4* cls2 + 3],
+             [4* cls3, 4* cls3 + 1, 4* cls3 + 2, 4* cls3 + 3],
+             ...]
+            """
             bbox_pred = torch.gather(bbox_pred, 1, inds)
         assert bbox_pred.size(1) == 4
 
         if rois.size(1) == 4:
+            # decode to readable box predictions, roi => final predicted box
             new_rois = delta2bbox(rois, bbox_pred, self.target_means,
                                   self.target_stds, img_meta['img_shape'])
         else:
