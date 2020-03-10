@@ -41,7 +41,7 @@ class BBoxHead(nn.Module):
            num_classes: int, for cls loss
            target_means: tensor, regression normalization means
            target_stds: tensor, regression normalization std
-           reg_class_agnostic: bool, ???
+           reg_class_agnostic: bool, whether to regress bboxes for all classes
            loss_cls: dict, config for cls loss
            loss_bbox: dict, config for bbox loss
         """
