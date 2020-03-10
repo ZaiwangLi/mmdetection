@@ -247,6 +247,8 @@ class BBoxHead(nn.Module):
         assert img_ids.numel() <= len(img_metas)
 
         bboxes_list = []
+        
+        # solove image one by one
         for i in range(len(img_metas)):
             inds = torch.nonzero(rois[:, 0] == i).squeeze(dim=1)
             num_rois = inds.numel()
@@ -255,8 +257,11 @@ class BBoxHead(nn.Module):
             label_ = labels[inds]
             bbox_pred_ = bbox_preds[inds]
             img_meta_ = img_metas[i]
+            
+            # assign results
             pos_is_gts_ = pos_is_gts[i]
-
+            
+            # decode roi at the correct class location
             bboxes = self.regress_by_class(bboxes_, label_, bbox_pred_,
                                            img_meta_)
 
