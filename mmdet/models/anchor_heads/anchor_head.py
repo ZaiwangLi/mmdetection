@@ -297,9 +297,10 @@ class AnchorHead(nn.Module):
         Transform outputs for a single batch item(image) into labeled boxes.
         Args:
             cls_score_list (list[tensor]): tensors of shape (num_anchors * num_classes, H, W)
-                cls scores splited by scale level for one image 
+                cls scores splited by scale level for one image
             bbox_pred_list (list[tensor]): tensors of shape (num_anchors * 4, H, W)
                 bbox sacores splited by scale level for one image
+                anchor head doesnt give more bboxes for one anchor
             mlvl_anchors (list[tensor]): tensors of shape (num_anchors * 4, H, W) 
                 anchors splited by scale level for one image
             img_shape (tuple): 
@@ -327,6 +328,8 @@ class AnchorHead(nn.Module):
             bbox_pred = bbox_pred.permute(1, 2, 0).reshape(-1, 4)
             
             nms_pre = cfg.get('nms_pre', -1)
+            
+            # nms pre thresholding for each level
             if nms_pre > 0 and scores.shape[0] > nms_pre:
                 # Get maximum scores for foreground classes.
                 if self.use_sigmoid_cls:
@@ -337,6 +340,7 @@ class AnchorHead(nn.Module):
                 anchors = anchors[topk_inds, :]
                 bbox_pred = bbox_pred[topk_inds, :]
                 scores = scores[topk_inds, :]
+            # decode
             bboxes = delta2bbox(anchors, bbox_pred, self.target_means,
                                 self.target_stds, img_shape)
             mlvl_bboxes.append(bboxes)
