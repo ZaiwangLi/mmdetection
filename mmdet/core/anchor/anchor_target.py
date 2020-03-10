@@ -199,7 +199,8 @@ def anchor_inside_flags(flat_anchors,
                         valid_flags,
                         img_shape,
                         allowed_border=0):
-    """
+    """remove anchors in image padding area by valid_flags
+       remove anchors in the border area by allow_border
     Args:
         flat_anchors: shape [-1, 4], for anchors without feature map info
         valid_flags: prior knowledge of validation
