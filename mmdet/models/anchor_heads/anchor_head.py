@@ -80,13 +80,15 @@ class AnchorHead(nn.Module):
         for anchor_base in self.anchor_base_sizes:
             self.anchor_generators.append(
                 AnchorGenerator(anchor_base, anchor_scales, anchor_ratios))
-
+        
+        # anchor number
         self.num_anchors = len(self.anchor_ratios) * len(self.anchor_scales)
         self._init_layers()
 
     def _init_layers(self):
         self.conv_cls = nn.Conv2d(self.in_channels,
                                   self.num_anchors * self.cls_out_channels, 1)
+        # regression doesnt depend on cls nums, only for foreground and background
         self.conv_reg = nn.Conv2d(self.in_channels, self.num_anchors * 4, 1)
 
     def init_weights(self):
