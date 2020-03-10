@@ -11,12 +11,9 @@
 # the list for multi-level is [level1_bbox_preds1, level2_bbox_preds2, level3_bbox_preds3, ...]
 # level1_bbox1 of shape (N, x, H, W) , x is for cls or regression channel
 
-# 
+# get bboxes have the same dimension of fpn-predicted bboxes
 
-# when doing any operations in decode,  (N, x, H, W) and (x, H, W) 
-
-
-
+# so finally the losses are splitted by feature maps. the rpn bboxes are splitted by feature maps
 
 
 from __future__ import division
