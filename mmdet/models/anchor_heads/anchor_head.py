@@ -147,6 +147,8 @@ class AnchorHead(nn.Module):
         anchor_list = [multi_level_anchors for _ in range(num_imgs)]
 
         # for each image, we compute valid flags of multi level anchors
+        # feature map sizes are always the same, but since images may be padded
+        # the functional area for the anchors may vary.
         valid_flag_list = []
         for img_id, img_meta in enumerate(img_metas):
             multi_level_flags = []
