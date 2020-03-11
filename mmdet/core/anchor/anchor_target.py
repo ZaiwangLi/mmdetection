@@ -1,3 +1,12 @@
+# feature map, anchors representation: list[list]
+#   2D list element: tensor
+#   len(list1) = image num, len(list2) = scale level num
+#   assigning anchors => we dont actually use scale level dimension
+#                        how to assign only depends on image index
+#   calculating the loss => neither of the dimensions is important
+
+
+
 import torch
 
 from ..bbox import PseudoSampler, assign_and_sample, bbox2delta, build_assigner
@@ -33,8 +42,10 @@ def anchor_target(anchor_list,
     num_imgs = len(img_metas)
     assert len(anchor_list) == len(valid_flag_list) == num_imgs
 
-    # anchor number of multi levels
+    # anchor number of multi levels, 
     num_level_anchors = [anchors.size(0) for anchors in anchor_list[0]]
+    
+    # since level is not important for anchor assign and sampling.
     # concat all level anchors and flags to a single tensor
     for i in range(num_imgs):
         assert len(anchor_list[i]) == len(valid_flag_list[i])
@@ -110,13 +121,16 @@ def anchor_target_single(flat_anchors,
                          unmap_outputs=True):
     """
     Args:
-        flat_anchors: shape of [-1, 4], other feature map info are lost.
-        valid_flags: prior knowledge on whether a anchor is useful
-        gt_bboxes: the classification and regression for
-        gt_bboxes_ignore: prior knowledge on whether a gtbbox is useful
-        img_meta: >>
-        target_means:
-        target_stds:
+        flat_anchors (tensor): shape(-1, 4), only for one image, 
+                               scale level info are lost.
+        valid_flags (tensor): shape(-1, 1), only for one image,
+                              prior knowledge on whether an anchor is useful
+        gt_bboxes (tensor): shape(-1, 4), only for one image
+                            the bboxes for anchor assign
+        gt_bboxes_ignore (tensor): prior knowledge on whether a gtbbox is useful
+        img_meta (dict): image info 
+        target_means ():
+        target_stds ():
         cfg:
         label_chennels: 
         sampling:
