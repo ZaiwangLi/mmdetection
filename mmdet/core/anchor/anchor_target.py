@@ -1,9 +1,15 @@
-# feature map, anchors representation: list[list]
+# feature map, anchors representation: list1[list2]
 #   2D list element: tensor
 #   len(list1) = image num, len(list2) = scale level num
-#   assigning anchors => we dont actually use scale level dimension
-#                        how to assign only depends on image index
-#   calculating the loss => neither of the dimensions is important
+
+# when to deal with these 2 dim?
+#   1. assigning anchors: we dont actually use scale level dimension, omit it
+#      how to assign only depends on image index,
+#   2. After anchor assign, every bbox even from different images will have 
+#      its own gtbox and gtcls. So batch dim will be omitted while scale level
+#      is restored.
+#   3. calculating the loss => we need scale level dim to balance losses from 
+#      different scale level
 
 
 
@@ -45,7 +51,7 @@ def anchor_target(anchor_list,
     # anchor number of multi levels, 
     num_level_anchors = [anchors.size(0) for anchors in anchor_list[0]]
     
-    # since level is not important for anchor assign and sampling.
+    # since level is not important for anchor assign and sampling, omit
     # concat all level anchors and flags to a single tensor
     for i in range(num_imgs):
         assert len(anchor_list[i]) == len(valid_flag_list[i])
