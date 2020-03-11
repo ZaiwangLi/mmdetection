@@ -192,6 +192,16 @@ class AnchorHead(nn.Module):
              img_metas,
              cfg,
              gt_bboxes_ignore=None):
+        """Loss functions for cls and regression
+        Args:
+            cls_scores ():
+            bbox_preds ():
+            gt_bboxes (): 
+            gt_labels ():
+            img_metas ():
+            cfg ():
+            gt_bboxes_ignore ():
+        """
         featmap_sizes = [featmap.size()[-2:] for featmap in cls_scores]
         assert len(featmap_sizes) == len(self.anchor_generators)
 
