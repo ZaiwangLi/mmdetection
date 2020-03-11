@@ -135,7 +135,7 @@ class AnchorHead(nn.Module):
         num_levels = len(featmap_sizes)
 
         # since feature map sizes of all images are the same, we only compute
-        # anchors for one time
+        # anchors for one time and duplicate it num_imgs times
         multi_level_anchors = []
         for i in range(num_levels):
             anchors = self.anchor_generators[i].grid_anchors(
