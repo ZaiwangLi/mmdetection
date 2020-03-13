@@ -164,7 +164,11 @@ class AnchorHead(nn.Module):
                 multi_level_flags.append(flags)
             valid_flag_list.append(multi_level_flags)
 
-        return anchor_list, valid_flag_list
+        return anchor_list, valid_flag_list             #valid flag亚敏：图片尺寸不一样，缩放到同样的长度时，宽度会不一样
+                                                        #这时候把长度fix到固定的size，宽度短了的要padding 为0
+                                                        #那宽度要是长了呢？
+                                                        #解决方法：可以把待处理图片的较长的一条边 fix 到固定的长度。
+                                                        #valid_flag真的是这个作用吗？？
 
     def loss_single(self, cls_score, bbox_pred, labels, label_weights,
                     bbox_targets, bbox_weights, num_total_samples, cfg):
