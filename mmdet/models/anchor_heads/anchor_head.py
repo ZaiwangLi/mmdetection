@@ -32,7 +32,7 @@ from ..builder import build_loss
 from ..registry import HEADS
 
 
-@HEADS.register_module
+@HEADS.register_module                        #如何注册
 class AnchorHead(nn.Module):
     """Anchor-based head (RPN, RetinaNet, SSD, etc.).
 
@@ -82,7 +82,7 @@ class AnchorHead(nn.Module):
         self.use_sigmoid_cls = loss_cls.get('use_sigmoid', False)
         self.sampling = loss_cls['type'] not in ['FocalLoss', 'GHMC']
         if self.use_sigmoid_cls:
-            self.cls_out_channels = num_classes - 1
+            self.cls_out_channels = num_classes - 1      #为什么sigmoid的output cls会少一个呢
         else:
             self.cls_out_channels = num_classes
 
