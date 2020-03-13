@@ -17,6 +17,15 @@
 # eg: tracking will have a score matrix to decide whether objects 
 # from 2 different frames are the same objects
 
+#               up1    
+#             ---------
+#        left1|   up2 |right1
+#             |   ----|---
+#             |   |   |  |
+#             ---------  | 
+#            left2|      |right2
+#                 --------
+#                   down2
 import torch
 
 

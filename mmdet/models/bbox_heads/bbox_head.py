@@ -1,3 +1,8 @@
+# 1. bbox regression channel num = 4 * num_classes, bbox cls channel num = num_classes
+#    this is for for multi-class nums
+# 2. weight initialization: fc layers are initialized with normal function
+# 3. bboxhead only deal with stages after roi pooling and roi assignment
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -31,6 +36,20 @@ class BBoxHead(nn.Module):
                      loss_weight=1.0),
                  loss_bbox=dict(
                      type='SmoothL1Loss', beta=1.0, loss_weight=1.0)):
+        """
+        Args:
+           with_avg_pool: bool, whether to change ROI to a vector
+           with_cls: bool, cls loss
+           with_reg: bool, regression loss
+           roi_feat_size: int, resize shape
+           in_channels: int, input roi channels
+           num_classes: int, for cls loss
+           target_means: tensor, regression normalization means
+           target_stds: tensor, regression normalization std
+           reg_class_agnostic: bool, whether to regress bboxes for all classes, default true
+           loss_cls: dict, config for cls loss
+           loss_bbox: dict, config for bbox loss
+        """
         super(BBoxHead, self).__init__()
         assert with_cls or with_reg
         self.with_avg_pool = with_avg_pool
@@ -61,6 +80,8 @@ class BBoxHead(nn.Module):
         self.debug_imgs = None
 
     def init_weights(self):
+        """Weight initialization of fc layers are normal_
+        """
         if self.with_cls:
             nn.init.normal_(self.fc_cls.weight, 0, 0.01)
             nn.init.constant_(self.fc_cls.bias, 0)
@@ -70,6 +91,8 @@ class BBoxHead(nn.Module):
 
     @auto_fp16()
     def forward(self, x):
+        """forward from ROI tensors to cls and regression
+        """
         if self.with_avg_pool:
             x = self.avg_pool(x)
         x = x.view(x.size(0), -1)
@@ -79,6 +102,14 @@ class BBoxHead(nn.Module):
 
     def get_target(self, sampling_results, gt_bboxes, gt_labels,
                    rcnn_train_cfg):
+        """after anchor assignment and sampling, the boxes and gts are matched in pairs,
+           get_target is encoding.
+        Args:
+            sampling_resuls: list contain the pairs for pos and negs
+            gt_bboxes: not used
+            gt_labels: not used
+            rcnn_train_cfg: dict, only for pos_weight here
+        """
         pos_proposals = [res.pos_bboxes for res in sampling_results]
         neg_proposals = [res.neg_bboxes for res in sampling_results]
         pos_gt_bboxes = [res.pos_gt_bboxes for res in sampling_results]
@@ -142,10 +173,23 @@ class BBoxHead(nn.Module):
                        scale_factor,
                        rescale=False,
                        cfg=None):
+        """For inference, to get the final detection boxes
+        Args:
+            rois (Tensors):  Shape (n*bs, 5), where n is image number per GPU,
+                and bs is the sampled RoIs per image. The first column is
+                the image id and the next 4 columns are x1, y1, x2, y2.
+            cls_score (Tensor): shape 
+            bbox_preds (Tensor): Shape (n*bs, 4) or (n*bs, 4*#class). for box predictions
+            image_shape (tuple): h w
+            scale_factor (float): 
+            rescale (bool): 
+            cfg (None or dict): 
+        """
         if isinstance(cls_score, list):
             cls_score = sum(cls_score) / float(len(cls_score))
         scores = F.softmax(cls_score, dim=1) if cls_score is not None else None
-
+        
+        # decode
         if bbox_pred is not None:
             bboxes = delta2bbox(rois[:, 1:], bbox_pred, self.target_means,
                                 self.target_stds, img_shape)
@@ -228,6 +272,8 @@ class BBoxHead(nn.Module):
         assert img_ids.numel() <= len(img_metas)
 
         bboxes_list = []
+        
+        # solove image one by one
         for i in range(len(img_metas)):
             inds = torch.nonzero(rois[:, 0] == i).squeeze(dim=1)
             num_rois = inds.numel()
@@ -236,8 +282,11 @@ class BBoxHead(nn.Module):
             label_ = labels[inds]
             bbox_pred_ = bbox_preds[inds]
             img_meta_ = img_metas[i]
+            
+            # assign results
             pos_is_gts_ = pos_is_gts[i]
-
+            
+            # decode roi at the correct class location
             bboxes = self.regress_by_class(bboxes_, label_, bbox_pred_,
                                            img_meta_)
 
@@ -249,7 +298,7 @@ class BBoxHead(nn.Module):
             bboxes_list.append(bboxes[keep_inds])
 
         return bboxes_list
-
+    
     @force_fp32(apply_to=('bbox_pred', ))
     def regress_by_class(self, rois, label, bbox_pred, img_meta):
         """Regress the bbox for the predicted class. Used in Cascade R-CNN.
@@ -268,10 +317,17 @@ class BBoxHead(nn.Module):
         if not self.reg_class_agnostic:
             label = label * 4
             inds = torch.stack((label, label + 1, label + 2, label + 3), 1)
+            """
+            [[4* cls1, 4* cls1 + 1, 4* cls1 + 2, 4* cls1 + 3],
+             [4* cls2, 4* cls2 + 1, 4* cls2 + 2, 4* cls2 + 3],
+             [4* cls3, 4* cls3 + 1, 4* cls3 + 2, 4* cls3 + 3],
+             ...]
+            """
             bbox_pred = torch.gather(bbox_pred, 1, inds)
         assert bbox_pred.size(1) == 4
 
         if rois.size(1) == 4:
+            # decode to readable box predictions, roi => final predicted box
             new_rois = delta2bbox(rois, bbox_pred, self.target_means,
                                   self.target_stds, img_meta['img_shape'])
         else:

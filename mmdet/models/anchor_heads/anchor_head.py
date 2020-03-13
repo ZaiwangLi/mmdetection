@@ -1,7 +1,22 @@
-# anchor num:
-#   anchor num per pixel of 1 feature map = scales * ratios
-#   anchor num per feature map = (scales * ratios * h * w)
+# weight initialization: norm? why
+# Anchor head wont predict more than one bbox for one anchor.
 
+# boxes can be splited by: level or image
+
+# anchors are represented by 2d dim list(list of list):
+# 1st dim is for image index, 2nd dim is for scale level
+# [[level1_anchors, level2_anchors, level3_anchors, ...],
+#  [level1_anchors, level2_anchors, level3_anchors, ...],
+#  ...]
+# level1_anchors of shape (x, H, W), x is for cls or regression channel
+
+# choices between list of tensor and add one more dimension to the tensor:
+# [tensor1, tensor2, tensor3, ...]: [] is a list or [] is a tensor
+# [] is a tensor: favor this, but tensor can only solve synchronous missions.
+# [] is a list: when we have to process tensor1, tensor2 sperately,
+#               for example, anchor assign has to be processed one by one image,
+#               losses are splitted by scale levels.
+# so here, list is used because we have to process tensors sperately by image and scale level
 
 
 from __future__ import division
@@ -79,16 +94,21 @@ class AnchorHead(nn.Module):
         self.fp16_enabled = False
 
         self.anchor_generators = []
+        
+        # anchor_base_sizes is the base sizes for different feature maps
+        # 1 feature map has 1 base size
         for anchor_base in self.anchor_base_sizes:
             self.anchor_generators.append(
                 AnchorGenerator(anchor_base, anchor_scales, anchor_ratios))
-
+        
+        # anchor number per feature map pixel
         self.num_anchors = len(self.anchor_ratios) * len(self.anchor_scales)
         self._init_layers()
 
     def _init_layers(self):
         self.conv_cls = nn.Conv2d(self.in_channels,
                                   self.num_anchors * self.cls_out_channels, 1)
+        # regression doesnt depend on cls nums, only for foreground and background
         self.conv_reg = nn.Conv2d(self.in_channels, self.num_anchors * 4, 1)
 
     def init_weights(self):
@@ -118,7 +138,7 @@ class AnchorHead(nn.Module):
         num_levels = len(featmap_sizes)
 
         # since feature map sizes of all images are the same, we only compute
-        # anchors for one time
+        # anchors for one time and duplicate it num_imgs times
         multi_level_anchors = []
         for i in range(num_levels):
             anchors = self.anchor_generators[i].grid_anchors(
@@ -127,6 +147,8 @@ class AnchorHead(nn.Module):
         anchor_list = [multi_level_anchors for _ in range(num_imgs)]
 
         # for each image, we compute valid flags of multi level anchors
+        # feature map sizes are always the same, but since images may be padded
+        # the functional area for the anchors may vary.
         valid_flag_list = []
         for img_id, img_meta in enumerate(img_metas):
             multi_level_flags = []
@@ -146,6 +168,17 @@ class AnchorHead(nn.Module):
 
     def loss_single(self, cls_score, bbox_pred, labels, label_weights,
                     bbox_targets, bbox_weights, num_total_samples, cfg):
+    """The loss is calculated from 2 paired(1 to 1) tensors.
+    Args:    
+        cls_score () 
+        bbox_pred ()
+        labels ()
+        label_weights ()
+        bbox_targets ()
+        bbox_weights ()
+        num_total_samples ()
+        cfg ()
+    """
         # classification loss
         labels = labels.reshape(-1)
         label_weights = label_weights.reshape(-1)
@@ -173,6 +206,16 @@ class AnchorHead(nn.Module):
              img_metas,
              cfg,
              gt_bboxes_ignore=None):
+        """Loss functions for cls and regression
+        Args:
+            cls_scores ():
+            bbox_preds ():
+            gt_bboxes (): 
+            gt_labels ():
+            img_metas ():
+            cfg ():
+            gt_bboxes_ignore ():
+        """
         featmap_sizes = [featmap.size()[-2:] for featmap in cls_scores]
         assert len(featmap_sizes) == len(self.anchor_generators)
 
@@ -224,6 +267,8 @@ class AnchorHead(nn.Module):
         Args:
             cls_scores (list[Tensor]): Box scores for each scale level
                 Has shape (N, num_anchors * num_classes, H, W)
+                list length = scale level 
+                
             bbox_preds (list[Tensor]): Box energies / deltas for each scale
                 level with shape (N, num_anchors * 4, H, W)
             img_metas (list[dict]): size / scale info for each image
@@ -292,22 +337,42 @@ class AnchorHead(nn.Module):
                           cfg,
                           rescale=False):
         """
-        Transform outputs for a single batch item into labeled boxes.
+        Transform outputs for a single batch item(image) into labeled boxes.
+        Args:
+            cls_score_list (list[tensor]): tensors of shape (num_anchors * num_classes, H, W)
+                cls scores splited by scale level for one image
+            bbox_pred_list (list[tensor]): tensors of shape (num_anchors * 4, H, W)
+                bbox sacores splited by scale level for one image
+                anchor head doesnt give more bboxes for one anchor
+            mlvl_anchors (list[tensor]): tensors of shape (num_anchors * 4, H, W) 
+                anchors splited by scale level for one image
+            img_shape (tuple): 
+            scale_factor (tensor):
+            cfg (dict or none):
+            rescale bool: if True, return boxes in original image space
         """
         assert len(cls_score_list) == len(bbox_pred_list) == len(mlvl_anchors)
         mlvl_bboxes = []
         mlvl_scores = []
         for cls_score, bbox_pred, anchors in zip(cls_score_list,
                                                  bbox_pred_list, mlvl_anchors):
+            # image size must be same
             assert cls_score.size()[-2:] == bbox_pred.size()[-2:]
+            
+            # channel last for box operations, remove hw dimensions
             cls_score = cls_score.permute(1, 2,
                                           0).reshape(-1, self.cls_out_channels)
             if self.use_sigmoid_cls:
                 scores = cls_score.sigmoid()
             else:
                 scores = cls_score.softmax(-1)
+                
+            # channel last for box operations, remove hw demensions
             bbox_pred = bbox_pred.permute(1, 2, 0).reshape(-1, 4)
+            
             nms_pre = cfg.get('nms_pre', -1)
+            
+            # nms pre thresholding for each level
             if nms_pre > 0 and scores.shape[0] > nms_pre:
                 # Get maximum scores for foreground classes.
                 if self.use_sigmoid_cls:
@@ -318,6 +383,7 @@ class AnchorHead(nn.Module):
                 anchors = anchors[topk_inds, :]
                 bbox_pred = bbox_pred[topk_inds, :]
                 scores = scores[topk_inds, :]
+            # decode
             bboxes = delta2bbox(anchors, bbox_pred, self.target_means,
                                 self.target_stds, img_shape)
             mlvl_bboxes.append(bboxes)

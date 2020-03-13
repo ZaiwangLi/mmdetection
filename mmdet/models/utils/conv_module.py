@@ -7,7 +7,7 @@ from .conv_ws import ConvWS2d
 from .norm import build_norm_layer
 
 
-# 1. 头顶天，脚踏地：向上读的懂paper，理解技术大趋势，向下扣的了code，能事无巨细
+# 1. 理解技术大趋势能事无巨细
 # 2. code reading order: from small parts to the whole (network) structure.
 # 3. python builders: 
 #    generic builder = register + builder, directly pass all params by **kwargs

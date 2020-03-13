@@ -112,6 +112,7 @@ class MaxIoUAssigner(BaseAssigner):
         if (self.ignore_iof_thr > 0) and (gt_bboxes_ignore is not None) and (
                 gt_bboxes_ignore.numel() > 0):
             if self.ignore_wrt_candidates:
+                # iof intersection over forground, intersection / bbox_areas
                 ignore_overlaps = bbox_overlaps(
                     bboxes, gt_bboxes_ignore, mode='iof')
                 ignore_max_overlaps, _ = ignore_overlaps.max(dim=1)
@@ -166,6 +167,18 @@ class MaxIoUAssigner(BaseAssigner):
 
         # for each anchor, which gt best overlaps with it
         # for each anchor, the max iou of all gts
+        # eg: 
+        #   pos_iou_thr = 0.5  pos_iou_thr = 0.3
+        #         b0  b1  b2  b3           b0  b1  b2  b3                   
+        #   gt0   0.1 0.5 0.1 0.2          0.7 0.5 0.5 0.5             gt0  0.5   gt0 b1
+        #   gt1   0.3 0.3 0.3 0.5                                      gt1  0.5   gt1 b3
+        #   gt2   0.5 0.2 0.2 0.1  =>      b0  b1  b2  b3      and     gt2  0.5   gt2 b0   => b0  b1  b2  b3
+        #   gt3   0.7 0.1 0.8 0.2          gt3 gt0 gt3 gt1             gt3  0.7   gt3 b0      gt2 gt0 gt3 gt1
+        #
+        #         assigned_gt_inds:        b0  b1  b2  b3
+        #                                  3   0   3   1
+        #
+        #
         max_overlaps, argmax_overlaps = overlaps.max(dim=0)
         # for each gt, which anchor best overlaps with it
         # for each gt, the max iou of all proposals

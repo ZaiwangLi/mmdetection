@@ -1,3 +1,18 @@
+# feature map, anchors representation: list1[list2]
+#   2D list element: tensor
+#   len(list1) = image num, len(list2) = scale level num
+
+# when to deal with these 2 dim?
+#   1. assigning anchors: we dont actually use scale level dimension, omit it
+#      how to assign only depends on image index,
+#   2. After anchor assign, every bbox even from different images will have 
+#      its own gtbox and gtcls. So batch dim will be omitted while scale level
+#      is restored.
+#   3. calculating the loss => we need scale level dim to balance losses from 
+#      different scale level
+
+
+
 import torch
 
 from ..bbox import PseudoSampler, assign_and_sample, bbox2delta, build_assigner
@@ -33,8 +48,10 @@ def anchor_target(anchor_list,
     num_imgs = len(img_metas)
     assert len(anchor_list) == len(valid_flag_list) == num_imgs
 
-    # anchor number of multi levels
+    # anchor number of multi levels, 
     num_level_anchors = [anchors.size(0) for anchors in anchor_list[0]]
+    
+    # since level is not important for anchor assign and sampling, omit
     # concat all level anchors and flags to a single tensor
     for i in range(num_imgs):
         assert len(anchor_list[i]) == len(valid_flag_list[i])
@@ -78,8 +95,13 @@ def anchor_target(anchor_list,
 
 def images_to_levels(target, num_level_anchors):
     """Convert targets by image to targets by feature level.
-
     [target_img0, target_img1] -> [target_level0, target_level1, ...]
+    Args:
+        target: all the target(boxes or something else) across 
+            different images in a batch
+        num_level_anchors: list, [lvl1_num, lvl2_num, lvl3_num ...] 
+    returns:
+        level_targets: split all the targets by levels
     """
     target = torch.stack(target, 0)
     level_targets = []
@@ -103,17 +125,48 @@ def anchor_target_single(flat_anchors,
                          label_channels=1,
                          sampling=True,
                          unmap_outputs=True):
+    """
+    Args:
+        flat_anchors (tensor): shape(-1, 4), only for one image, 
+                               scale level info are lost.
+        valid_flags (tensor): shape(-1, 1), only for one image,
+                              prior knowledge on whether an anchor is useful
+        gt_bboxes (tensor): shape(-1, 4), only for one image
+                            the bboxes for anchor assign
+        gt_bboxes_ignore (tensor): prior knowledge on whether a gtbbox is useful
+        img_meta (dict): image info 
+        target_means ():
+        target_stds ():
+        cfg:
+        label_chennels: 
+        sampling:
+        unmap_outputs:
+    return:
+        ?
+    """
+    # both index and T are torch/numpy tensors
+    #  index = [T F T F T T F F]
+    #  T = [1,2,3,4,5,6,5,7,8]
+    #  T[index] = [1,3,5,6]
+    #
+    #  index = [1, 2, 5, 7]
+    #  T[index] = [2, 3, 6, 8]
+    
+    # remove images outside the image
     inside_flags = anchor_inside_flags(flat_anchors, valid_flags,
                                        img_meta['img_shape'][:2],
                                        cfg.allowed_border)
+    
     if not inside_flags.any():
         return (None, ) * 6
+    
     # assign gt and sample anchors
     anchors = flat_anchors[inside_flags, :]
 
     if sampling:
         assign_result, sampling_result = assign_and_sample(
             anchors, gt_bboxes, gt_bboxes_ignore, None, cfg)
+        
     else:
         bbox_assigner = build_assigner(cfg.assigner)
         assign_result = bbox_assigner.assign(anchors, gt_bboxes,
@@ -121,7 +174,8 @@ def anchor_target_single(flat_anchors,
         bbox_sampler = PseudoSampler()
         sampling_result = bbox_sampler.sample(assign_result, anchors,
                                               gt_bboxes)
-
+    
+    
     num_valid_anchors = anchors.shape[0]
     bbox_targets = torch.zeros_like(anchors)
     bbox_weights = torch.zeros_like(anchors)
@@ -131,12 +185,14 @@ def anchor_target_single(flat_anchors,
     pos_inds = sampling_result.pos_inds
     neg_inds = sampling_result.neg_inds
     if len(pos_inds) > 0:
+        # encoding:
         pos_bbox_targets = bbox2delta(sampling_result.pos_bboxes,
                                       sampling_result.pos_gt_bboxes,
                                       target_means, target_stds)
         bbox_targets[pos_inds, :] = pos_bbox_targets
         bbox_weights[pos_inds, :] = 1.0
         if gt_labels is None:
+            # binary classification
             labels[pos_inds] = 1
         else:
             labels[pos_inds] = gt_labels[sampling_result.pos_assigned_gt_inds]
@@ -163,6 +219,17 @@ def anchor_inside_flags(flat_anchors,
                         valid_flags,
                         img_shape,
                         allowed_border=0):
+    """remove anchors in image padding area by valid_flags
+       remove anchors in the border area by allow_border
+    Args:
+        flat_anchors: shape [-1, 4], for anchors without feature map info
+        valid_flags: prior knowledge of validation
+        image_shape:
+        allowed_border: when >=0 anchors must have limitations 
+            regard to the image size
+    returns:
+        inside_flags: indicate wheter the anchor is in the image 
+    """
     img_h, img_w = img_shape[:2]
     if allowed_border >= 0:
         inside_flags = valid_flags & \
@@ -175,9 +242,19 @@ def anchor_inside_flags(flat_anchors,
     return inside_flags
 
 
+
 def unmap(data, count, inds, fill=0):
     """ Unmap a subset of item (data) back to the original set of items (of
     size count) """
+    """
+    Args:
+        data: subset items
+        count: original set item number
+        inds: data's original indexes
+        fill: fill in default vales for return tensor
+    return:
+        ret, shape of original data with corresponding pos filled by data
+    """
     if data.dim() == 1:
         ret = data.new_full((count, ), fill)
         ret[inds] = data
